@@ -2,6 +2,7 @@ import React, {useState, useEffect} from 'react'
 import {View, FlatList, StyleSheet, ActivityIndicator} from 'react-native'
 import Http from '../../libs/http'
 import CoinsItem from './CoinsItem'
+import Colors from '../../res/colors'
 
 const CoinsScreen = ({navigation, route}) => {
   const [coins, setCoins] = useState({
@@ -52,7 +53,7 @@ const CoinsScreen = ({navigation, route}) => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#fff',
+    backgroundColor: Colors.charade,
     flex: 1,
   },
   title: {
