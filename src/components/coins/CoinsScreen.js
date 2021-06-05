@@ -39,14 +39,21 @@ const CoinsScreen = ({navigation, route}) => {
     }
   }
 
-  const handlePress = () => {
-    navigation.navigate('CoinDetail')
+  const handlePress = (coin) => {
+    navigation.navigate('CoinDetail', { coin })
   }
 
   return (
     <View style={styles.container}>
-      {coins.isLoading && <ActivityIndicator style={styles.loader} color='#fff' size='large' />}
-      <FlatList data={coins.data} renderItem={CoinsItem} />
+      {coins.isLoading && (
+        <ActivityIndicator style={styles.loader} color='#fff' size='large' />
+      )}
+      <FlatList
+        data={coins.data}
+        renderItem={({item}) => (
+          <CoinsItem item={item} onPress={() => handlePress(item)} />
+        )}
+      />
     </View>
   )
 }
@@ -73,7 +80,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   loader: {
-    marginTop: 60
+    marginTop: 60,
   }
 })
 
