@@ -1,19 +1,41 @@
-import React, { useEffect } from 'react'
-import { View, Text, Pressable, StyleSheet } from 'react-native'
+import React, {useState, useEffect} from 'react'
+import {View, FlatList, StyleSheet, ActivityIndicator} from 'react-native'
 import Http from '../../libs/http'
+import CoinsItem from './CoinsItem'
 
-const CoinsScreen = ({
-  navigation,
-  route
-}) => {
+const CoinsScreen = ({navigation, route}) => {
+  const [coins, setCoins] = useState({
+    data: [],
+    isLoading: false,
+    error: null,
+  })
 
   useEffect(() => {
     getData()
   }, [])
 
   const getData = async () => {
-    const coins = await Http.instance.request('https://api.coinlore.net/api/tickers/')
-    console.log('coins', coins)
+    setCoins({
+      ...coins,
+      isLoading: true,
+    })
+    try {
+      const {data} = await Http.instance.request(
+        'https://api.coinlore.net/api/tickers/',
+      )
+      console.log(data)
+      setCoins({
+        ...coins,
+        isLoading: false,
+        data: data,
+      })
+    } catch (error) {
+      setCoins({
+        ...coins,
+        isLoading: false,
+        error: error,
+      })
+    }
   }
 
   const handlePress = () => {
@@ -22,26 +44,24 @@ const CoinsScreen = ({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Coins Text</Text>
-      <Pressable style={styles.btn} onPress={handlePress}>
-        <Text style={styles.btnTitle}>Go to details</Text>
-      </Pressable>
+      {coins.isLoading && <ActivityIndicator style={styles.loader} color='#fff' size='large' />}
+      <FlatList data={coins.data} renderItem={CoinsItem} />
     </View>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "red",
-    flex: 1
+    backgroundColor: '#fff',
+    flex: 1,
   },
   title: {
     color: '#fff',
-    textAlign: 'center'
+    textAlign: 'center',
   },
   btn: {
     padding: 0,
-    backgroundColor: "green",
+    backgroundColor: 'green',
     borderRadius: 8,
     margin: 16,
     justifyContent: 'center',
@@ -49,7 +69,10 @@ const styles = StyleSheet.create({
     minHeight: 40,
   },
   btnTitle: {
-    color: '#fff'
+    color: '#fff',
+  },
+  loader: {
+    marginTop: 60
   }
 })
 
