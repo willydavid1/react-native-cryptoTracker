@@ -1,8 +1,9 @@
 import React, {useState, useEffect} from 'react'
-import {View, Image, Text, StyleSheet, SectionList, FlatList} from 'react-native'
+import {View, Image, Text, StyleSheet, SectionList, FlatList, Pressable, Alert} from 'react-native'
 import Colors from '../../res/colors'
 import Http from '../../libs/http'
 import CoinMarketItem from './CoinMarketItem'
+import Storage from '../../libs/storage'
 
 const CoinsDetailScreen = ({navigation, route}) => {
   const [coinData, setCoinData] = useState({})
@@ -11,12 +12,14 @@ const CoinsDetailScreen = ({navigation, route}) => {
     isLoading: false,
     error: null,
   })
+  const [isFavorite, setIsFavorite] = useState(false)
 
   useEffect(() => {
     const {coin} = route.params
     setCoinData(coin)
     navigation.setOptions({title: coin.symbol})
     getMarkets(coin.id)
+    getFavorite(coin.id)
   }, [])
 
   const getSections = () => {
@@ -66,14 +69,72 @@ const CoinsDetailScreen = ({navigation, route}) => {
     
   }
 
+  const toggleFavorite = () => {
+    isFavorite ? showAlertRemoveFav() : addFavorite()
+  }
+
+  const addFavorite = async () => {
+    const coin = JSON.stringify(coinData)
+    const key = `favorite-${coinData.id}`
+    const stored = await Storage.instance.store(key, coin)
+    if (stored) {
+      setIsFavorite(true)
+    }
+  }
+
+  const showAlertRemoveFav = () => {
+    Alert.alert('Remove Favorite', 'Are you sure?', [
+      {
+        text: "cancel",
+        onPress: () => {},
+        style: 'cancel'
+      },
+      {
+        text: "Remove",
+        onPress: removeFavorite,
+        style: 'destructive'
+      }
+    ])
+  }
+
+  const removeFavorite = async () => {
+    const key = `favorite-${coinData.id}`
+
+    await Storage.instance.remove(key)
+    setIsFavorite(false)
+  }
+
+  const getFavorite = async (coinID) => {
+    const key = `favorite-${coinID}`
+    try {
+      const favStr = await Storage.instance.get(key)
+      console.log(JSON.parse(favStr))
+      setIsFavorite(!!favStr)
+    } catch (error) {
+      console.log('get favorites err', error)
+    }
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.subHeader}>
-        <Image
-          style={styles.iconImage}
-          source={{uri: getSymbolIcon(coinData.name)}}
-        />
-        <Text style={styles.titleText}>{coinData.name}</Text>
+        <View style={styles.row}>
+          <Image
+            style={styles.iconImage}
+            source={{uri: getSymbolIcon(coinData.name)}}
+          />
+          <Text style={styles.titleText}>{coinData.name}</Text>
+        </View>
+
+        <Pressable
+          onPress={toggleFavorite}
+          style={[
+            styles.btnFavorite,
+            isFavorite ? styles.btnFavoriteRemove : styles.btnFavoriteAdd
+          ]}
+        >
+          <Text style={styles.btnFavoriteTitle}>{isFavorite ? 'Remove favorite' : 'Add Favorite'}</Text>
+        </Pressable>
       </View>
 
       <SectionList
@@ -117,6 +178,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.1)',
     padding: 16,
     flexDirection: 'row',
+    justifyContent: 'space-between'
+  },
+  row: {
+    flexDirection: 'row'
   },
   list: {
     maxHeight: 100,
@@ -157,6 +222,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
   },
+  btnFavorite: {
+    padding: 8,
+    borderRadius: 8
+  },
+  btnFavoriteAdd: {
+    backgroundColor: Colors.picton
+  },
+  btnFavoriteRemove: {
+    backgroundColor: Colors.carmine
+  },
+  btnFavoriteTitle: {
+    color: Colors.white
+  }
 })
 
 export default CoinsDetailScreen
