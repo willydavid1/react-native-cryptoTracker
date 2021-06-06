@@ -3,11 +3,13 @@ import {View, FlatList, StyleSheet, ActivityIndicator} from 'react-native'
 import Http from '../../libs/http'
 import CoinsItem from './CoinsItem'
 import Colors from '../../res/colors'
+import CoinsSearch from './CoinsSearch'
 
 const CoinsScreen = ({navigation, route}) => {
   const [coins, setCoins] = useState({
     data: [],
-    isLoading: false,
+    initData: [],
+    isLoading: true,
     error: null,
   })
 
@@ -24,11 +26,12 @@ const CoinsScreen = ({navigation, route}) => {
       const {data} = await Http.instance.request(
         'https://api.coinlore.net/api/tickers/',
       )
-      console.log(data)
+      console.log('data', data)
       setCoins({
         ...coins,
         isLoading: false,
-        data: data,
+        initData: data,
+        data,
       })
     } catch (error) {
       setCoins({
@@ -39,12 +42,26 @@ const CoinsScreen = ({navigation, route}) => {
     }
   }
 
-  const handlePress = (coin) => {
-    navigation.navigate('CoinDetail', { coin })
+  const handlePress = coin => {
+    navigation.navigate('CoinDetail', {coin})
+  }
+
+  const handleSearch = query => {
+    const coinsFiltered = coins.initData.filter(
+      coin =>
+        coin.name.toLowerCase().includes(query.toLowerCase()) ||
+        coin.symbol.toLowerCase().includes(query.toLowerCase()),
+    )
+
+    setCoins({
+      ...coins,
+      data: coinsFiltered,
+    })
   }
 
   return (
     <View style={styles.container}>
+      <CoinsSearch onChange={handleSearch} disabled={coins.isLoading} />
       {coins.isLoading && (
         <ActivityIndicator style={styles.loader} color='#fff' size='large' />
       )}
@@ -81,7 +98,7 @@ const styles = StyleSheet.create({
   },
   loader: {
     marginTop: 60,
-  }
+  },
 })
 
 export default CoinsScreen
