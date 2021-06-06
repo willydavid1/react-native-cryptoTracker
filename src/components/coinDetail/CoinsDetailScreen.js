@@ -98,6 +98,7 @@ const CoinsDetailScreen = ({navigation, route}) => {
           style={styles.list}
           data={markets.data}
           horizontal
+          keyExtractor={(_, index) => index.toString()}
           renderItem={({ item }) => <CoinMarketItem item={item} />}
         />
       </View>
